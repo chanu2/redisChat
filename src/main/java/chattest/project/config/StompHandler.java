@@ -79,7 +79,10 @@ public class StompHandler implements ChannelInterceptor {
 
             Member member = userRepository.findById(uid).orElseThrow(RuntimeException::new);
 
-            Reservation reservation = reservationRepository.findById(Long.valueOf(roomId)).orElseThrow(RuntimeException::new);
+            log.info("sessionId={}",member.getName());
+
+
+            Reservation reservation = reservationRepository.findById(Long.valueOf(roomId)).orElseThrow(IllegalArgumentException::new);
 
             if(participationRepository.existsByReservationAndMember(reservation,member)){
                 chatRoomService.enterChatRoom(roomId,sessionId,member.getName());
