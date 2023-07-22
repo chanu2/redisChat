@@ -11,8 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long>{
-    @Override
-    Optional<Reservation> findById(Long id);
+
 
     List<Reservation> findTop5ByOrderByIdDesc();
 

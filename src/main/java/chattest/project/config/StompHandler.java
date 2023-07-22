@@ -26,7 +26,6 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@Order(Ordered.HIGHEST_PRECEDENCE + 99)
 public class StompHandler implements ChannelInterceptor {
 
     //private final JwtDecoder jwtDecoder;
@@ -57,6 +56,7 @@ public class StompHandler implements ChannelInterceptor {
 
         // 최초 소켓 연결
         if (StompCommand.CONNECT == accessor.getCommand()) {
+
             //String headerToken = accessor.getFirstNativeHeader(TOKEN);
 
             Long uid = Long.valueOf(accessor.getFirstNativeHeader("uid"));
@@ -79,13 +79,17 @@ public class StompHandler implements ChannelInterceptor {
 
             Member member = userRepository.findById(uid).orElseThrow(RuntimeException::new);
 
+            log.info("membername ={}",member.getName());
+
             log.info("sessionId={}",member.getName());
 
 
-            Reservation reservation = reservationRepository.findById(Long.valueOf(roomId)).orElseThrow(IllegalArgumentException::new);
+            //Reservation reservation = reservationRepository.findById(Long.valueOf(roomId)).orElseThrow(RuntimeException::new);
+            Reservation reservation = reservationRepository.findById(Long.valueOf(roomId)).get();
 
-            if(participationRepository.existsByReservationAndMember(reservation,member)){
-                chatRoomService.enterChatRoom(roomId,sessionId,member.getName());
+
+            if(participationRepository.existsByReservationAndMember(reservation,member)) {
+                chatRoomService.enterChatRoom(roomId, sessionId, member.getName());
             }
 
             //chatRoomService.enterChatRoom(roomId,sessionId,member.getName());
