@@ -16,4 +16,5 @@ spring:
         show_sql: true
         format_sql: true
 logging.level:
-  org.hibernate.SQL: debug
+  root: info
+  #org.hibernate.SQL: debug

@@ -1,6 +1,7 @@
 package chattest.project.config;
 
 import chattest.project.dto.ChatMessageSaveDto;
+import chattest.project.exception.UserNotFoundException;
 import chattest.project.model.Member;
 import chattest.project.model.Reservation;
 import chattest.project.pubsub.RedisPublisher;
@@ -77,20 +78,28 @@ public class StompHandler implements ChannelInterceptor {
             String sessionId = accessor.getFirstNativeHeader("sessionId");
             log.info("sessionId={}",sessionId);
 
-            Member member = userRepository.findById(uid).orElseThrow(RuntimeException::new);
+            log.error("1");
 
-            log.info("membername ={}",member.getName());
+            try {
+                //Member member = userRepository.findById(uid).orElseThrow(() -> UserNotFoundException.EXCEPTION);
+                //Reservation reservation = reservationRepository.findById(Long.valueOf(roomId)).orElseThrow(() -> UserNotFoundException.EXCEPTION);
+                Member member = userRepository.findById(uid).orElseThrow(() -> UserNotFoundException.EXCEPTION);
+                Reservation reservation = reservationRepository.findById(Long.valueOf(roomId)).orElseThrow(() -> UserNotFoundException.EXCEPTION);
 
-            log.info("sessionId={}",member.getName());
+                if(participationRepository.existsByReservationAndMember(reservation,member)) {
+                    chatRoomService.enterChatRoom(roomId, sessionId, member.getName());
+                }else{
+                    throw UserNotFoundException.EXCEPTION;
+                }
 
 
-            //Reservation reservation = reservationRepository.findById(Long.valueOf(roomId)).orElseThrow(RuntimeException::new);
-            Reservation reservation = reservationRepository.findById(Long.valueOf(roomId)).get();
+            }catch (UserNotFoundException ex){
+                ex.getStackTrace();
 
 
-            if(participationRepository.existsByReservationAndMember(reservation,member)) {
-                chatRoomService.enterChatRoom(roomId, sessionId, member.getName());
+
             }
+
 
             //chatRoomService.enterChatRoom(roomId,sessionId,member.getName());
 
