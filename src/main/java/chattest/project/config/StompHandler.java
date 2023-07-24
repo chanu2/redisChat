@@ -5,6 +5,7 @@ import chattest.project.exception.UserNotFoundException;
 import chattest.project.model.Member;
 import chattest.project.model.Reservation;
 import chattest.project.pubsub.RedisPublisher;
+import chattest.project.repo.ChatRoomRepository;
 import chattest.project.repo.ParticipationRepository;
 import chattest.project.repo.ReservationRepository;
 import chattest.project.repo.UserRepository;
@@ -22,6 +23,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -50,6 +52,8 @@ public class StompHandler implements ChannelInterceptor {
     private final UserRepository userRepository;
 
     private final ReservationRepository reservationRepository;
+
+    private final ChatRoomRepository chatRoomRepository;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -80,28 +84,24 @@ public class StompHandler implements ChannelInterceptor {
 
             log.error("1");
 
-            try {
-                //Member member = userRepository.findById(uid).orElseThrow(() -> UserNotFoundException.EXCEPTION);
-                //Reservation reservation = reservationRepository.findById(Long.valueOf(roomId)).orElseThrow(() -> UserNotFoundException.EXCEPTION);
-                Member member = userRepository.findById(uid).orElseThrow(() -> UserNotFoundException.EXCEPTION);
-                Reservation reservation = reservationRepository.findById(Long.valueOf(roomId)).orElseThrow(() -> UserNotFoundException.EXCEPTION);
 
-                if(participationRepository.existsByReservationAndMember(reservation,member)) {
-                    chatRoomService.enterChatRoom(roomId, sessionId, member.getName());
-                }else{
-                    throw UserNotFoundException.EXCEPTION;
-                }
+            Member member = userRepository.findById(uid).orElseThrow(() -> UserNotFoundException.EXCEPTION);
+            Reservation reservation = reservationRepository.findById(Long.valueOf(roomId)).orElseThrow(() -> UserNotFoundException.EXCEPTION);
 
-
-            }catch (UserNotFoundException ex){
-                ex.getStackTrace();
-
-
-
+            if(!participationRepository.existsByReservationAndMember(reservation,member)) {
+                throw new RuntimeException("참여하지 않은 사람");
             }
 
+            chatRoomService.enterChatRoom(roomId, sessionId, member.getName());
 
-            //chatRoomService.enterChatRoom(roomId,sessionId,member.getName());
+            // test
+            Map<String, String> chatRoomId1 = chatRoomRepository.getOpsHashEnterRoom().entries("CHAT_ROOM_ID_1");
+            log.info("leng={}",chatRoomId1.size());
+
+            for (String value : chatRoomId1.values()) {
+                log.info("value={}",value);
+            }
+
 
 
             // TODO: 2023/07/18 인증 관련 로직 추가
